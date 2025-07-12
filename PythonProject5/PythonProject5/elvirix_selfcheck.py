@@ -6,20 +6,19 @@ def load_groups():
             data = yaml.safe_load(f)
             if isinstance(data, dict) and "groups" in data:
                 return data["groups"]
-            else:
-                print("⚠️ group_list.yaml не содержит ключ 'groups'")
-                return []
+            print("⚠️ Ключ 'groups' не найден в group_list.yaml")
+            return []
     except Exception as e:
-        print(f"Ошибка загрузки group_list.yaml: {e}")
+        print(f"❌ Ошибка при загрузке group_list.yaml: {e}")
         return []
 
 def check_group_transition(current_group, group_list):
     try:
-        next_index = group_list.index(current_group) + 1
-        return group_list[next_index]
+        index = group_list.index(current_group) + 1
+        return group_list[index]
     except (ValueError, IndexError):
-        return group_list[0] if group_list else None
+        return group_list[0] if group_list else "@default_group"
 
 def run():
     groups = load_groups()
-    print(f"✅ Загружено {len(groups)} групп")
+    print(f"✅ Загружено {len(groups)} групп для перехода")
