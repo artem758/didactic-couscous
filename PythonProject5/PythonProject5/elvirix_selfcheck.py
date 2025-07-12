@@ -1,24 +1,32 @@
 import yaml
+import logging
 
-def load_groups():
+logger = logging.getLogger(__name__)
+
+def load_groups(path="group_list.yaml"):
     try:
-        with open("group_list.yaml", "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-            if isinstance(data, dict) and "groups" in data:
-                return data["groups"]
-            print("⚠️ Ключ 'groups' не найден в group_list.yaml")
+        groups = data.get("groups") if isinstance(data, dict) else None
+        if not groups:
+            logger.warning("group_list.yaml найден, но 'groups' пуст или не там")
             return []
+        return groups
+    except FileNotFoundError:
+        logger.error(f"{path} не найден")
     except Exception as e:
-        print(f"❌ Ошибка при загрузке group_list.yaml: {e}")
-        return []
+        logger.error(f"Ошибка при парсинге {path}: {e}")
+    return []
 
 def check_group_transition(current_group, group_list):
+    if not group_list:
+        return None
     try:
-        index = group_list.index(current_group) + 1
-        return group_list[index]
-    except (ValueError, IndexError):
-        return group_list[0] if group_list else "@default_group"
+        nxt = group_list[(group_list.index(current_group) + 1) % len(group_list)]
+        return nxt
+    except ValueError:
+        return group_list[0]
 
 def run():
     groups = load_groups()
-    print(f"✅ Загружено {len(groups)} групп для перехода")
+    logger.info(f"elvirix_selfcheck: загружено групп — {len(groups)}")

@@ -1,21 +1,34 @@
 import os
 import importlib
+import logging
 
-project_dir = os.path.dirname(os.path.abspath(__file__))
-script_files = [
-    f[:-3] for f in os.listdir(project_dir)
-    if f.endswith(".py") and f != "main.py"
-]
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("main")
 
-print("🟢 Запуск Elvirix...\n")
+def discover_modules(path):
+    return [
+        fname[:-3] for fname in os.listdir(path)
+        if fname.endswith(".py") and fname not in ("main.py",)
+    ]
 
-for name in script_files:
-    try:
-        module = importlib.import_module(name)
-        if hasattr(module, "run") and callable(module.run):
-            print(f"▶️ Запускаем {name}.run()")
-            module.run()
-        else:
-            print(f"⚠️ Модуль {name} не содержит run(), пропущен.")
-    except Exception as e:
-        print(f"❌ Ошибка при запуске {name}: {e}")
+if __name__ == "__main__":
+    cwd = os.path.dirname(__file__)
+    os.chdir(cwd)
+    logger.info("main: старт проекта Elvirix")
+    modules = discover_modules(cwd)
+    for name in modules:
+        try:
+            mod = importlib.import_module(name)
+            if hasattr(mod, "run"):
+                logger.info(f"main: запускаю {name}.run()")
+                mod.run()
+            else:
+                logger.warning(f"main: {name} без run(), пропускаю")
+        except Exception as e:
+            logger.error(f"main: ошибка в {name}: {e}")
+    # После загрузки всех модулей запускаем бота, если он есть
+    if "bot" in modules:
+        import bot
+        bot.run()
+    else:
+        logger.warning("main: модуль bot не найден")
